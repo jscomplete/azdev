@@ -1,7 +1,11 @@
 node_modules/
+bundles/
+build/
+coverage/
 .vscode/
+.reactful.json
+.env
 .DS_Store
+yarn-error.log
 .idea/
-web/src/dist/
-web/src/.cache/
-prettier.config.js
+api/src/schema/schema.graphql

@@ -1,64 +1,233 @@
+CREATE EXTENSION IF NOT EXISTS "unaccent";
+CREATE EXTENSION citext;
+
+CREATE DOMAIN textid AS citext
+  CHECK ( value ~ '^[a-z0-9\-]+$' );
+CREATE DOMAIN username AS citext
+  CHECK ( value ~ '^[a-z][a-z0-9\-]{4,20}$' );
+CREATE DOMAIN email AS citext
+  CHECK ( value ~ '^[a-z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$' );
+
+CREATE OR REPLACE FUNCTION slugify(value TEXT)
+RETURNS TEXT AS $$
+  select array_to_string(ARRAY(
+    select word from (
+      select UNNEST(regexp_split_to_array(regexp_replace(lower(unaccent(trim(value))), '[^a-z0-9 ]+', '', 'gi'), ' ')) as word) WORDS
+      where length(word) > 1 limit 10
+    ),
+    '-'
+   ) || '-' || substr(md5(random()::text), 1, 10);
+$$ LANGUAGE SQL STRICT IMMUTABLE;
+
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE SCHEMA IF NOT EXISTS azdev;
 
-CREATE TABLE azdev.users (
-  id serial PRIMARY KEY,
-  username text NOT NULL UNIQUE,
-  hashed_password text NOT NULL,
+CREATE TABLE IF NOT EXISTS azdev.users (
+  idx serial PRIMARY KEY,
+  id textid NOT NULL DEFAULT md5((now()::text || '-'::text) || random()::text) UNIQUE,
+  username username NOT NULL UNIQUE,
+  email email NOT NULL UNIQUE,
   first_name text,
   last_name text,
+  hashed_password text NOT NULL,
   hashed_auth_token text,
-  created_at timestamp without time zone NOT NULL
-    DEFAULT (now() at time zone 'utc'),
+  hashed_renew_token text,
+  access_level integer NOT NULL DEFAULT 1,
+  auth_token_expires_at timestamp without time zone,
+  renew_token_expires_at timestamp without time zone,
+  created_at timestamp without time zone NOT NULL DEFAULT (now() at time zone 'utc'),
+  last_updated_at timestamp without time zone,
 
-  CHECK (lower(username) = username)
+  CHECK (length(email) > 8)
 );
 
-CREATE TABLE azdev.tasks (
-  id serial PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS azdev.tags (
+  idx serial PRIMARY KEY,
+  id textid NOT NULL DEFAULT md5((now()::text || '-'::text) || random()::text) UNIQUE,
+  title text NOT NULL UNIQUE,
+  created_by textid NOT NULL,
+  use_counter integer NOT NULL DEFAULT 1,
+  published_at timestamp without time zone,
+  published_by textid,
+  created_at timestamp without time zone NOT NULL DEFAULT (now() at time zone 'utc'),
+  last_updated_at timestamp without time zone,
+
+  FOREIGN KEY (created_by) REFERENCES azdev.users(id),
+  FOREIGN KEY (published_by) REFERENCES azdev.users(id),
+  CHECK (length(title) > 2)
+);
+
+CREATE TABLE IF NOT EXISTS azdev.tasks (
+  idx serial PRIMARY KEY,
+  id textid NOT NULL UNIQUE,
   content text NOT NULL,
-  tags text,
-  user_id integer NOT NULL,
   is_private boolean NOT NULL DEFAULT FALSE,
   approach_count integer NOT NULL DEFAULT 0,
-  created_at timestamp without time zone NOT NULL
-    DEFAULT (now() at time zone 'utc'),
+  sort_rank integer,
+  created_by textid NOT NULL,
+  published_at timestamp without time zone,
+  published_by textid,
+  created_at timestamp without time zone NOT NULL DEFAULT (now() at time zone 'utc'),
+  last_updated_at timestamp without time zone,
 
-  FOREIGN KEY (user_id) REFERENCES azdev.users
+  FOREIGN KEY (created_by) REFERENCES azdev.users(id),
+  FOREIGN KEY (published_by) REFERENCES azdev.users(id),
+  CHECK (length(content) > 10)
 );
 
-CREATE TABLE azdev.approaches (
-  id serial PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS azdev.task_tags (
+  idx serial PRIMARY KEY,
+  created_by textid NOT NULL,
+  task_id textid NOT NULL,
+  tag_id textid NOT NULL,
+  published_at timestamp without time zone,
+  published_by textid,
+  created_at timestamp without time zone NOT NULL DEFAULT (now() at time zone 'utc'),
+  last_updated_at timestamp without time zone,
+
+  FOREIGN KEY (created_by) REFERENCES azdev.users(id),
+  FOREIGN KEY (published_by) REFERENCES azdev.users(id),
+  FOREIGN KEY (task_id) REFERENCES azdev.tasks(id),
+  FOREIGN KEY (tag_id) REFERENCES azdev.tags(id)
+);
+
+CREATE TABLE IF NOT EXISTS azdev.approaches (
+  idx serial PRIMARY KEY,
+  id textid NOT NULL DEFAULT md5((now()::text || '-'::text) || random()::text) UNIQUE,
   content text NOT NULL,
-  user_id integer NOT NULL,
-  task_id integer NOT NULL,
+  task_id textid NOT NULL,
   vote_count integer NOT NULL DEFAULT 0,
-  created_at timestamp without time zone NOT NULL
-    DEFAULT (now() at time zone 'utc'),
+  sort_rank integer,
+  created_by textid NOT NULL,
+  published_at timestamp without time zone,
+  published_by textid,
+  created_at timestamp without time zone NOT NULL DEFAULT (now() at time zone 'utc'),
+  last_updated_at timestamp without time zone,
 
-  FOREIGN KEY (user_id) REFERENCES azdev.users,
-  FOREIGN KEY (task_id) REFERENCES azdev.tasks
+  FOREIGN KEY (created_by) REFERENCES azdev.users(id),
+  FOREIGN KEY (published_by) REFERENCES azdev.users(id),
+  FOREIGN KEY (task_id) REFERENCES azdev.tasks(id),
+  CHECK (length(content) > 10)
 );
 
-INSERT INTO "azdev"."users"("username","hashed_password")
-VALUES
-(E'test',crypt('123456', gen_salt('bf')));
+CREATE TABLE IF NOT EXISTS azdev.approach_details (
+  idx serial PRIMARY KEY,
+  id textid NOT NULL DEFAULT md5((now()::text || '-'::text) || random()::text) UNIQUE,
+  approach_id textid NOT NULL,
+  category text NOT NULL,
+  content text NOT NULL,
+  sort_rank integer,
+  created_by textid NOT NULL,
+  published_at timestamp without time zone,
+  published_by textid,
+  created_at timestamp without time zone NOT NULL DEFAULT (now() at time zone 'utc'),
+  last_updated_at timestamp without time zone,
 
-INSERT INTO "azdev"."tasks" ("content","tags","user_id","approach_count","is_private")
-VALUES
-(E'Make an image in HTML change based on the theme color mode (dark or light)',E'code,html',1,1,FALSE),
-(E'Get rid of only the unstaged changes since the last git commit',E'command,git',1,1,FALSE),
-(E'The syntax for a switch statement (AKA case statement) in JavaScript',E'code,javascript',1,2,FALSE),
-(E'Calculate the sum of numbers in a JavaScript array',E'code,javascript',1,1,FALSE),
-(E'Babel configuration file for "react" and "env" presets',E'config,javascript,node',1,1,TRUE),
-(E'Create a secure one-way hash for a text value (like a password) in Node',E'code,node',1,1,FALSE);
+  FOREIGN KEY (created_by) REFERENCES azdev.users(id),
+  FOREIGN KEY (published_by) REFERENCES azdev.users(id),
+  FOREIGN KEY (approach_id)  REFERENCES azdev.approaches(id),
+  CHECK (length(content) > 10),
+  CHECK (category in ('explanation', 'note', 'warning'))
+);
 
-INSERT INTO "azdev"."approaches" ("content","user_id","task_id","vote_count")
-VALUES
-(E'<picture>\n  <source\n    srcset="settings-dark.png"\n    media="(prefers-color-scheme: dark)"\n  />\n  <source\n    srcset="settings-light.png"\n    media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"\n  />\n  <img src="settings-light.png" loading="lazy" />\n</picture>',1,1,0),
-(E'git diff | git apply --reverse',1,2,0),
-(E'switch (expression) {\n  case value1:\n    // do something when expression === value1\n    break;\n  case value2:\n    // do something when expression === value2\n    break;\n  default:\n    // do something when expression does not equal any of the values above\n}',1,3,5),
-(E'function doSomethingFor(expression) {\n  switch (expression) {\n    case value1:\n      // do something when expression === value1\n      return;\n    case value2:\n      // do something when expression === value2\n      return;\n    default:\n      // do something when expression does not equal any of the values above\n  }\n}',1,3,18),
-(E'arrayOfNumbers.reduce((acc, curr) => acc + curr, 0)',1,4,0),
-(E'module.exports = {\n  presets: [\n    \'@babel/react\',\n    [\n      \'@babel/env\',\n      {\n        modules: \'commonjs\',\n        targets: [\n          \'> 1%\',\n          \'last 3 versions\',\n          \'ie >= 9\',\n          \'ios >= 8\',\n          \'android >= 4.2\',\n        ],\n      },\n    ],\n  ]\n};',1,5,0),
-(E'const bcrypt = require(\'bcrypt\');\nconst hashedPass = bcrypt.hashSync(\'testPass123\', 10);',1,6,0);
+CREATE TABLE IF NOT EXISTS azdev.approach_votes (
+  idx serial PRIMARY KEY,
+  id textid NOT NULL DEFAULT md5((now()::text || '-'::text) || random()::text) UNIQUE,
+  approach_id textid NOT NULL,
+  vote integer NOT NULL,
+  created_by textid NOT NULL,
+  created_at timestamp without time zone NOT NULL DEFAULT (now() at time zone 'utc'),
+  last_updated_at timestamp without time zone,
+
+  FOREIGN KEY (created_by) REFERENCES azdev.users(id),
+  FOREIGN KEY (approach_id)  REFERENCES azdev.approaches(id),
+  CHECK (vote BETWEEN -1 AND 1),
+  UNIQUE (approach_id, created_by)
+);
+
+/* last_update_at trigger */
+
+CREATE OR REPLACE FUNCTION azdev.update_last_updated_at() RETURNS trigger AS $$
+	BEGIN
+	  NEW.last_updated_at = (now() at time zone 'utc');
+	  RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_users_last_updated_at_trigger BEFORE INSERT OR UPDATE ON azdev.users
+  FOR EACH ROW
+  EXECUTE FUNCTION azdev.update_last_updated_at();
+
+CREATE TRIGGER update_tasks_last_updated_at_trigger BEFORE INSERT OR UPDATE ON azdev.tasks
+  FOR EACH ROW
+  EXECUTE FUNCTION azdev.update_last_updated_at();
+
+CREATE TRIGGER update_approaches_last_updated_at_trigger BEFORE INSERT OR UPDATE ON azdev.approaches
+  FOR EACH ROW
+  EXECUTE FUNCTION azdev.update_last_updated_at();
+
+CREATE TRIGGER update_approach_details_last_updated_at_trigger BEFORE INSERT OR UPDATE ON azdev.approach_details
+  FOR EACH ROW
+  EXECUTE FUNCTION azdev.update_last_updated_at();
+
+CREATE TRIGGER update_approach_votes_last_updated_at_trigger BEFORE INSERT OR UPDATE ON azdev.approach_votes
+  FOR EACH ROW
+  EXECUTE FUNCTION azdev.update_last_updated_at();
+
+/* slugify id trigger for tasks */
+
+CREATE OR REPLACE FUNCTION azdev.use_content_slug() RETURNS trigger AS $$
+	BEGIN
+	  NEW.id = slugify(NEW.content);
+	  RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER use_default_task_slug_trigger BEFORE INSERT ON azdev.tasks
+  FOR EACH ROW
+  WHEN (NEW.id IS NULL)
+  EXECUTE FUNCTION azdev.use_content_slug();
+
+/* approach_count trigger */
+
+CREATE OR REPLACE FUNCTION azdev.update_approach_count() RETURNS trigger AS $$
+	BEGIN
+    UPDATE azdev.tasks t
+    SET approach_count = (
+      SELECT count(*)
+      FROM azdev.approaches
+      WHERE task_id = t.id
+    )
+    where id = NEW.task_id;
+    RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_approach_count_trigger AFTER INSERT OR DELETE ON azdev.approaches
+  FOR EACH ROW
+  EXECUTE FUNCTION azdev.update_approach_count();
+
+/* vote_count trigger */
+
+CREATE OR REPLACE FUNCTION azdev.update_vote_count() RETURNS trigger AS $$
+	BEGIN
+    UPDATE azdev.approaches a
+    SET vote_count = (
+      SELECT sum(vote)
+      FROM azdev.approach_votes
+      WHERE approach_id = a.id
+    )
+    where id = NEW.approach_id;
+    RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_vote_count_trigger AFTER INSERT OR UPDATE OR DELETE ON azdev.approach_votes
+  FOR EACH ROW
+  EXECUTE FUNCTION azdev.update_vote_count();
+
+/* VIEWS */
+
+CREATE VIEW azdev.task_tags_view AS
+  SELECT tt.task_id, t.title
+  FROM azdev.task_tags tt JOIN azdev.tags t ON (tt.tag_id = t.id);
