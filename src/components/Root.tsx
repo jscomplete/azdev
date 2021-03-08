@@ -11,7 +11,7 @@ export default function Root() {
   const Component = mainComponents[component.name];
 
   return (
-    <div className="route-container">
+    <div id="root-container">
       <Navbar user={user} />
       <div className="main-container">
         <Component {...component.props} />

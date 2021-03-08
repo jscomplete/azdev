@@ -1,17 +1,23 @@
-body {
+#root-container {
   margin: 0.75rem;
+
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+
+  @apply max-w-4xl mx-auto;
+
+  .main-container {
+    @apply max-w-2xl mx-auto mt-6 mb-3;
+  }
+
+  .sm-container {
+    @apply max-w-sm px-3;
+  }
 }
 
-.logo {
-  @apply flex-1 font-bold text-lg;
-}
-
-.text-secondary {
-  @apply text-gray-800 italic text-sm;
-}
-
-.header {
-  @apply text-gray-700 font-bold;
+pre,
+code {
+  font-family: 'Monaco', 'Consolas', 'Inconsolata', 'Droid Sans Mono', monospace;
 }
 
 h1 {
@@ -31,20 +37,16 @@ a {
   @apply no-underline;
 }
 
-pre {
-  @apply font-mono;
+.logo {
+  @apply flex-1 font-bold text-lg;
 }
 
-.route-container {
-  @apply max-w-4xl mx-auto;
+.text-secondary {
+  @apply text-gray-800 italic text-sm;
 }
 
-.main-container {
-  @apply max-w-2xl mx-auto mt-6 mb-3;
-}
-
-.sm-container {
-  @apply max-w-sm px-3;
+.header {
+  @apply text-gray-700 font-bold;
 }
 
 .box {
@@ -142,6 +144,7 @@ nav,
 .approach-detail {
   @apply m-3 pb-4;
 }
+
 .approach-detail + .approach-detail {
   @apply border-t border-gray-300 pt-4;
 }

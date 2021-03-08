@@ -22,6 +22,12 @@ $$ LANGUAGE SQL STRICT IMMUTABLE;
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE SCHEMA IF NOT EXISTS azdev;
 
+CREATE TABLE IF NOT EXISTS azdev.redirects (
+  idx serial PRIMARY KEY,
+  path text NOT NULL UNIQUE,
+  dest text NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS azdev.users (
   idx serial PRIMARY KEY,
   id textid NOT NULL DEFAULT md5((now()::text || '-'::text) || random()::text) UNIQUE,

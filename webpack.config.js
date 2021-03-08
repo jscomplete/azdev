@@ -12,9 +12,6 @@ module.exports = (env) => {
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.json'],
       modules: [path.resolve('./src'), path.resolve('./node_modules')],
-      alias: {
-        styles: path.resolve('./styles'),
-      },
       fallback: {
         module: false,
         fs: false,
@@ -82,7 +79,7 @@ module.exports = (env) => {
         compiler.hooks.done.tap('Reactful', (stats) => {
           fs.writeFileSync(
             path.resolve(
-              env.dev ? './src/reactful.json' : './build/reactful.json',
+              env.dev ? './src/.reactful.json' : './build/.reactful.json',
             ),
             JSON.stringify(stats.toJson()['assetsByChunkName'], null, 2),
           );

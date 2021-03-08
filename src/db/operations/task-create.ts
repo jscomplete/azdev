@@ -63,7 +63,6 @@ const taskCreate = ({ pgQuery, currentUser }) => async ({ input }) => {
         tagsArray.reduce((values, tagTitle) => {
           values[`$${++valuesCounter}`] = tagTitle;
           values[`$${++valuesCounter}`] = currentUser.id;
-          console.log({ tagTitle, values });
           return values;
         }, {}),
       );

@@ -10,7 +10,6 @@ module.exports = {
     require('postcss-import'),
     require('tailwindcss'),
     require('postcss-nested'),
-    require('postcss-preset-env')({ stage: 1 }), // Nesting not working with just env
     ...(process.env.NODE_ENV === 'production' ? [purgecss] : []),
   ],
 };

@@ -3,6 +3,7 @@ import pgClient from './client';
 
 import userFromAuthToken from './operations/user-from-auth-token';
 
+import redirects from './operations/redirects';
 import usersInfo from './operations/users-info';
 import tasksInfo from './operations/tasks-info';
 import approachesInfo from './operations/approaches-info';
@@ -56,6 +57,7 @@ const pgApiWrapper = async () => {
   });
 
   api.userFromAuthToken = userFromAuthToken({ pgQuery });
+  api.redirects = redirects({ pgQuery });
 
   return api;
 };

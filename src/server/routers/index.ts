@@ -1,14 +1,12 @@
 import express from 'express';
 
 import { isDev } from 'config/server';
-import redirectsRouter from './redirects';
 import apisRouter from './apis';
 
 import pagesData from 'store/pages';
 
 const router = express.Router({ caseSensitive: true });
 
-router.use('/', redirectsRouter);
 router.use('/api', apisRouter);
 
 Object.entries(pagesData).forEach(([pageId, pageData]) => {

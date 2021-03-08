@@ -9,7 +9,15 @@
     "dev:format": "prettier --write .",
     "dev:db-server": "docker-compose -f dev-db/docker.yml up",
     "dev:web-server": "cross-env NODE_PATH=./src tsnd --respawn src/server/server.ts --ignore-watch public",
-    "dev:web-bundler": "webpack --mode=development --progress -w --env=dev"
+    "dev:web-bundler": "webpack --mode=development --progress -w --env=dev",
+    "build:all": "yarn && yarn build:node && yarn build:files && yarn build:bundle",
+    "build:bundle": "cross-env NODE_ENV=production webpack --mode=production --progress --env=prod",
+    "build:files": "copyfiles -u 1 -e \"src/**/*.ts\" -e \"src/**/*.tsx\" -e \"src/**/*.js\" \"src/**/*\"  build/",
+    "build:node": "rm -rf build && tsc --sourceMap false --skipLibCheck true",
+    "prod:start": "yarn cross-env NODE_ENV=production NODE_PATH=./build pm2 start -i max build/server/server.js --exp-backoff-restart-delay=150 --update-env --name azdevProd",
+    "prod:stop": "pm2 stop azdevProd",
+    "prod:reload": "pm2 reload --update-env azdevProd && yarn prod:logs",
+    "prod:logs": "pm2 logs --update-env azdevProd"
   },
   "dependencies": {
     "@apollo/client": "^3.3.11",
@@ -91,7 +99,7 @@
     "typesync": "^0.8.0"
   },
   "engines": {
-    "node": "14.x"
+    "node": "15.x"
   },
   "browserslist": [
     "> 0.5%, last 2 versions, not dead"

@@ -1,7 +1,6 @@
 import path from 'path';
 import express from 'express';
 import morgan from 'morgan';
-import bodyParser from 'body-parser';
 import cookieSession from 'cookie-session';
 import serialize from 'serialize-javascript';
 import helmet from 'helmet';
@@ -12,6 +11,7 @@ import pgApiWrapper from 'db/api';
 
 import * as config from 'config/server';
 import mainRouter from './routers/index';
+import redirectsRouter from './routers/redirects';
 
 import { printBasicReq, morganString, printParams } from 'utilities/logger';
 
@@ -53,12 +53,6 @@ const startServer = async () => {
     }),
   );
 
-  server.use(bodyParser.urlencoded({ extended: false }));
-  server.use(bodyParser.json());
-
-  server.use(bodyParser.urlencoded({ extended: false }));
-  server.use(bodyParser.json());
-
   server.locals.serialize = serialize;
   if (config.isDev) {
     server.locals.gVars = {
@@ -74,17 +68,32 @@ const startServer = async () => {
   }
 
   server.use(printParams);
-
   server.use('/', mainRouter);
-
   server.listen(config.port, () => {
     console.info(`Server is running on port ${config.port}`);
   });
 
   const pgApi = await pgApiWrapper();
 
+  const redirectsObj = await pgApi.redirects();
+
+  server.use(
+    '/',
+    redirectsRouter(
+      redirectsObj.reduce((acc, curr) => {
+        acc[curr.path] = curr.dest;
+        return acc;
+      }, {}),
+    ),
+  );
+
   const gServer = new ApolloServer({
     schema,
+    subscriptions: {
+      path: '/gs',
+    },
+    introspection: true,
+    playground: true,
     formatError: (err) => {
       const errorReport = {
         message: err.message,

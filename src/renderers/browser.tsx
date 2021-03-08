@@ -14,7 +14,7 @@ import { getMainDefinition } from '@apollo/client/utilities';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { setContext } from '@apollo/client/link/context';
 
-import 'styles/index.css';
+import '../styles/index.css';
 import { LOCAL_APP_STATE } from 'store';
 import Root from 'components/Root';
 

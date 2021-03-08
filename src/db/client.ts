@@ -1,8 +1,11 @@
 import pg from 'pg';
-import { connectionString } from 'config/server';
+import { isDev, connectionString } from 'config/server';
 
 export default async () => {
-  const pgPool = new pg.Pool({ connectionString });
+  const pgPool = new pg.Pool({
+    connectionString,
+    ssl: isDev ? false : { rejectUnauthorized: false },
+  });
 
   // Test the connection
   const client = await pgPool.connect();
