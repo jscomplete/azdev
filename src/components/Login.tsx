@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { gql, useMutation } from '@apollo/client';
 
-import { useStore } from '../store';
+import { useStore } from 'store';
 import Errors from './Errors';
 
 const USER_LOGIN = gql`
@@ -21,18 +21,15 @@ const USER_LOGIN = gql`
 
 export default function Login() {
   const { setLocalAppState } = useStore();
-  const [uiErrors, setUIErrors] = useState();
+  const [uiErrors, setUIErrors] = React.useState<any>([]);
 
-  const [loginUser, { error, loading }] = useMutation(USER_LOGIN);
-
-  if (error) {
-    return <div className="error">{error.message}</div>;
-  }
+  const [userLogin, { error, loading }] = useMutation(USER_LOGIN);
 
   const handleLogin = async (event) => {
     event.preventDefault();
+    setUIErrors([]);
     const input = event.target.elements;
-    const { data, errors: rootErrors } = await loginUser({
+    const { data, errors: rootErrors } = await userLogin({
       variables: {
         input: {
           username: input.username.value,
@@ -67,12 +64,9 @@ export default function Login() {
           </label>
         </div>
         <Errors errors={uiErrors} />
+        {error && <div className="error">{error.message}</div>}
         <div className="spaced">
-          <button
-            className="btn btn-primary"
-            type="submit"
-            disabled={loading}
-          >
+          <button className="btn btn-primary" type="submit" disabled={loading}>
             Login
           </button>
         </div>

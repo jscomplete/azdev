@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { useQuery, gql } from '@apollo/client';
 
-import { useStore } from '../store';
 import TaskSummary, { TASK_SUMMARY_FRAGMENT } from './TaskSummary';
 
 const MY_TASK_LIST = gql`
@@ -39,7 +38,7 @@ export default function MyTasks() {
         <h1>My Tasks</h1>
         {myTaskList.length === 0 && (
           <div className="box box-primary">
-            You have not created any Task entries yet
+            You have not created any tasks yet
           </div>
         )}
         {myTaskList.map((task) => (

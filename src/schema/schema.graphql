@@ -1,0 +1,127 @@
+type Query {
+  currentTime: String
+  taskInfo(id: ID!): Task
+  search(term: String!): [SearchResultItem!]!
+  me: Me
+}
+
+type Task implements SearchResultItem {
+  id: ID!
+  content: String!
+  tags: [String!]!
+  approachList: [Approach!]!
+  approachCount: Int!
+  author: User!
+  createdAt: String!
+}
+
+interface SearchResultItem {
+  id: ID!
+  content: String!
+}
+
+type Approach implements SearchResultItem {
+  id: ID!
+  content: String!
+  author: User!
+  detailList: [ApproachDetail!]!
+  voteCount: Int!
+  task: Task!
+  createdAt: String!
+}
+
+type User {
+  id: ID!
+  username: String
+  name: String!
+}
+
+type ApproachDetail {
+  id: ID!
+  content: String!
+  category: ApproachDetailCategory!
+}
+
+enum ApproachDetailCategory {
+  NOTE
+  EXPLANATION
+  WARNING
+}
+
+type Me {
+  id: ID!
+  username: String
+  name: String!
+  taskList: [Task!]!
+}
+
+type Mutation {
+  approachCreate(taskId: ID!, input: ApproachInput!): ApproachPayload
+  approachVote(approachId: ID!, input: ApproachVoteInput!): ApproachVotePayload
+  taskCreate(input: TaskInput!): TaskPayload
+  userCreate(input: UserInput!): UserPayload
+  userLogin(input: AuthInput!): UserPayload
+}
+
+type ApproachPayload {
+  errors: [UserError!]!
+  approach: Approach
+}
+
+type UserError {
+  message: String!
+}
+
+input ApproachInput {
+  content: String!
+  detailList: [ApproachDetailInput!]!
+}
+
+input ApproachDetailInput {
+  content: String!
+  category: ApproachDetailCategory!
+}
+
+type ApproachVotePayload {
+  errors: [UserError!]!
+  approach: Approach!
+}
+
+"""true for up-vote and false for down-vote"""
+input ApproachVoteInput {
+  up: Boolean!
+}
+
+type TaskPayload {
+  errors: [UserError!]!
+  task: Task
+}
+
+input TaskInput {
+  content: String!
+  tags: String
+  isPrivate: Boolean!
+}
+
+type UserPayload {
+  errors: [UserError!]!
+  user: User
+  authToken: String
+}
+
+input UserInput {
+  email: String!
+  username: String!
+  password: String!
+  firstName: String
+  lastName: String
+}
+
+input AuthInput {
+  username: String!
+  password: String!
+}
+
+type Subscription {
+  voteChanged(taskId: ID!): Approach!
+}

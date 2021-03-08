@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { gql, useMutation } from '@apollo/client';
 
+import { useStore } from 'store';
 import Errors from './Errors';
 
-export const APPROACH_FRAGMENT = `
+export const APPROACH_FRAGMENT = gql`
   fragment ApproachFragment on Approach {
     content
     voteCount
     author {
+      id
       username
     }
     detailList {
+      id
       content
       category
     }
@@ -23,7 +26,7 @@ const APPROACH_VOTE = gql`
       errors {
         message
       }
-      updatedApproach: approach {
+      approach {
         id
         voteCount
       }
@@ -32,15 +35,15 @@ const APPROACH_VOTE = gql`
 `;
 
 export default function Approach({ approach, isHighlighted }) {
-  const [uiErrors, setUIErrors] = useState([]);
+  const [uiErrors, setUIErrors] = React.useState<any>([]);
   const [submitVote, { error, loading }] = useMutation(APPROACH_VOTE);
+  const { useLocalAppState } = useStore();
 
-  if (error) {
-    return <div className="error">{error.message}</div>;
-  }
+  const user = useLocalAppState('user');
 
   const handleVote = (direction) => async (event) => {
     event.preventDefault();
+    setUIErrors([]);
     const { data, errors: rootErrors } = await submitVote({
       variables: {
         approachId: approach.id,
@@ -60,7 +63,8 @@ export default function Approach({ approach, isHighlighted }) {
     <button
       className="border-none"
       onClick={handleVote(direction)}
-      disabled={loading}
+      title={user ? 'Click to vote' : 'Login to vote'}
+      disabled={loading || !user}
     >
       <svg
         aria-hidden="true"
@@ -92,6 +96,7 @@ export default function Approach({ approach, isHighlighted }) {
         </div>
       </div>
       <Errors errors={uiErrors} />
+      {error && <div className="error">{error.message}</div>}
       {approach.detailList.map((detail, index) => (
         <div key={index} className="approach-detail">
           <div className="header">{detail.category}</div>

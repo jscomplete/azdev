@@ -9,7 +9,7 @@ import {
 import Task from './task';
 
 const fieldsWrapper = ({ meScope }) => {
-  const userFields = {
+  const userFields: any = {
     id: { type: new GraphQLNonNull(GraphQLID) },
     username: { type: GraphQLString },
     name: {
@@ -21,9 +21,7 @@ const fieldsWrapper = ({ meScope }) => {
 
   if (meScope) {
     userFields.taskList = {
-      type: new GraphQLNonNull(
-        new GraphQLList(new GraphQLNonNull(Task))
-      ),
+      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Task))),
       resolve: (source, args, { loaders, currentUser }) => {
         return loaders.tasksForUsers.load(currentUser.id);
       },

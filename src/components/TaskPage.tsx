@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import * as React from 'react';
+
 import { gql, useQuery, useSubscription } from '@apollo/client';
 
-import { useStore } from '../store';
+import { useStore } from 'store';
 import NewApproach from './NewApproach';
 import Approach, { APPROACH_FRAGMENT } from './Approach';
 import TaskSummary, { TASK_SUMMARY_FRAGMENT } from './TaskSummary';
@@ -22,6 +23,7 @@ export const FULL_TASK_FRAGMENT = gql`
 const TASK_INFO = gql`
   query taskInfo($taskId: ID!) {
     taskInfo(id: $taskId) {
+      id
       ...FullTaskData
     }
   }
@@ -39,8 +41,8 @@ const VOTE_CHANGED = gql`
 
 export default function TaskPage({ taskId }) {
   const { AppLink } = useStore();
-  const [showAddApproach, setShowAddApproach] = useState(false);
-  const [highlightedApproachId, setHighlightedApproachId] = useState();
+  const [showAddApproach, setShowAddApproach] = React.useState(false);
+  const [highlightedApproachId, setHighlightedApproachId] = React.useState();
 
   const { error, loading, data } = useQuery(TASK_INFO, {
     variables: { taskId },
@@ -73,10 +75,7 @@ export default function TaskPage({ taskId }) {
       <div>
         <div>
           {showAddApproach ? (
-            <NewApproach
-              taskId={taskId}
-              onSuccess={handleAddNewApproach}
-            />
+            <NewApproach taskId={taskId} onSuccess={handleAddNewApproach} />
           ) : (
             <div className="center y-spaced">
               <button

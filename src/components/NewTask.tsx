@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { useMutation, gql } from '@apollo/client';
 
-import { useStore } from '../store';
+import { useStore } from 'store';
 import Errors from './Errors';
 import { FULL_TASK_FRAGMENT } from './TaskPage';
 
@@ -22,7 +22,7 @@ const TASK_CREATE = gql`
 
 export default function NewTask() {
   const { useLocalAppState, setLocalAppState, AppLink } = useStore();
-  const [uiErrors, setUIErrors] = useState([]);
+  const [uiErrors, setUIErrors] = React.useState<any>([]);
 
   const [createTask, { error, loading }] = useMutation(TASK_CREATE);
 
@@ -31,25 +31,23 @@ export default function NewTask() {
   if (!user) {
     return (
       <div className="box">
-        <div className="center">
-          Please login to create a Task record
-        </div>
+        <div className="center">Please login to create a Task record</div>
       </div>
     );
   }
 
-  if (error) {
-    return <div className="error">{error.message}</div>;
-  }
-
   const handleNewTaskSubmit = async (event) => {
     event.preventDefault();
+    setUIErrors([]);
     const input = event.target.elements;
+    if (input.tags.value && input.tags.value.split(',').length > 5) {
+      return setUIErrors([{ message: 'Too many tags' }]);
+    }
     const { data, errors: rootErrors } = await createTask({
       variables: {
         input: {
           content: input.content.value,
-          tags: input.tags.value.split(','),
+          tags: input.tags.value,
           isPrivate: input.private.checked,
         },
       },
@@ -87,21 +85,25 @@ export default function NewTask() {
               <input
                 type="text"
                 name="tags"
-                placeholder="Comma-separated words (javascript, git, react, ...)"
-                required
+                placeholder="Up to 5 comma-separated words (javascript, git, react, ...)"
               />
             </label>
           </div>
 
           <div className="form-entry">
             <label>
-              <input type="checkbox" name="private" /> Make this a
-              private entry (only for your account)
+              <input type="checkbox" name="private" /> Make this a private entry
+              (only for your account)
             </label>
           </div>
           <Errors errors={uiErrors} />
+          {error && <div className="error">{error.message}</div>}
           <div className="spaced">
-            <button className="btn btn-primary" type="submit">
+            <button
+              className="btn btn-primary"
+              type="submit"
+              disabled={loading}
+            >
               Save
             </button>
           </div>

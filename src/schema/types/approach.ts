@@ -1,44 +1,49 @@
 import {
   GraphQLID,
   GraphQLObjectType,
-  GraphQLString,
   GraphQLInt,
+  GraphQLString,
   GraphQLNonNull,
   GraphQLList,
 } from 'graphql';
 
 import User from './user';
 import Task from './task';
-import SearchResultItem from './search-result-item';
 import ApproachDetail from './approach-detail';
+import SearchResultItem from './search-result-item';
 
 const Approach = new GraphQLObjectType({
   name: 'Approach',
-  interfaces: () => [SearchResultItem],
+  interfaces: [SearchResultItem],
   fields: () => ({
-    id: { type: new GraphQLNonNull(GraphQLID) },
-    content: { type: new GraphQLNonNull(GraphQLString) },
-    voteCount: { type: new GraphQLNonNull(GraphQLInt) },
-    createdAt: {
+    id: {
+      type: new GraphQLNonNull(GraphQLID),
+    },
+    content: {
       type: new GraphQLNonNull(GraphQLString),
-      resolve: ({ createdAt }) => createdAt.toISOString(),
     },
     author: {
       type: new GraphQLNonNull(User),
       resolve: (source, args, { loaders }) =>
-        loaders.users.load(source.userId),
-    },
-    task: {
-      type: new GraphQLNonNull(Task),
-      resolve: (source, args, { loaders }) =>
-        loaders.tasks.load(source.taskId),
+        loaders.users.load(source.createdBy),
     },
     detailList: {
       type: new GraphQLNonNull(
-        new GraphQLList(new GraphQLNonNull(ApproachDetail))
+        new GraphQLList(new GraphQLNonNull(ApproachDetail)),
       ),
       resolve: (source, args, { loaders }) =>
         loaders.detailLists.load(source.id),
+    },
+    voteCount: {
+      type: new GraphQLNonNull(GraphQLInt),
+    },
+    task: {
+      type: new GraphQLNonNull(Task),
+      resolve: (source, args, { loaders }) => loaders.tasks.load(source.taskId),
+    },
+    createdAt: {
+      type: new GraphQLNonNull(GraphQLString),
+      resolve: ({ createdAt }) => createdAt.toISOString(),
     },
   }),
 });

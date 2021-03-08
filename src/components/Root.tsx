@@ -1,6 +1,6 @@
-import React from 'react';
+import * as React from 'react';
 
-import { useStore } from '../store';
+import { useStore } from 'store';
 import * as mainComponents from './index';
 import Navbar from './Navbar';
 
@@ -13,7 +13,7 @@ export default function Root() {
   return (
     <div className="route-container">
       <Navbar user={user} />
-      <div className="main-component">
+      <div className="main-container">
         <Component {...component.props} />
       </div>
     </div>

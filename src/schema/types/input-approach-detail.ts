@@ -1,8 +1,4 @@
-import {
-  GraphQLInputObjectType,
-  GraphQLString,
-  GraphQLNonNull,
-} from 'graphql';
+import { GraphQLInputObjectType, GraphQLString, GraphQLNonNull } from 'graphql';
 
 import ApproachDetailCategory from './approach-detail-category';
 

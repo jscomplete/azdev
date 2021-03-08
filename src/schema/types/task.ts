@@ -19,26 +19,23 @@ const Task = new GraphQLObjectType({
     content: { type: new GraphQLNonNull(GraphQLString) },
     tags: {
       type: new GraphQLNonNull(
-        new GraphQLList(new GraphQLNonNull(GraphQLString))
+        new GraphQLList(new GraphQLNonNull(GraphQLString)),
       ),
-      resolve: (source) => source.tags.split(','),
+    },
+    approachList: {
+      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Approach))),
+      resolve: (source, args, { loaders }) =>
+        loaders.approachLists.load(source.id),
     },
     approachCount: { type: new GraphQLNonNull(GraphQLInt) },
-    createdAt: {
-      type: new GraphQLNonNull(GraphQLString),
-      resolve: (source) => source.createdAt.toISOString(),
-    },
     author: {
       type: new GraphQLNonNull(User),
       resolve: (source, args, { loaders }) =>
-        loaders.users.load(source.userId),
+        loaders.users.load(source.createdBy),
     },
-    approachList: {
-      type: new GraphQLNonNull(
-        new GraphQLList(new GraphQLNonNull(Approach))
-      ),
-      resolve: (source, args, { loaders }) =>
-        loaders.approachLists.load(source.id),
+    createdAt: {
+      type: new GraphQLNonNull(GraphQLString),
+      resolve: (source) => source.createdAt.toISOString(),
     },
   },
 });

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { gql, useQuery, useMutation } from '@apollo/client';
 
-import { useStore } from '../store';
+import { useStore } from 'store';
 import Errors from './Errors';
 import { APPROACH_FRAGMENT } from './Approach';
 
@@ -32,33 +32,30 @@ const APPROACH_CREATE = gql`
 
 export default function NewApproach({ taskId, onSuccess }) {
   const { useLocalAppState } = useStore();
-  const [detailRows, setDetailRows] = useState([0]);
-  const [uiErrors, setUIErrors] = useState([]);
+  const [detailRows, setDetailRows] = React.useState([0]);
+  const [uiErrors, setUIErrors] = React.useState<any>([]);
 
   const { error: dcError, loading: dcLoading, data } = useQuery(
-    DETAIL_CATEGORIES
+    DETAIL_CATEGORIES,
   );
 
-  const [createApproach, { error, loading }] = useMutation(
-    APPROACH_CREATE,
-    {
-      update(cache, { data: { approachCreate } }) {
-        if (approachCreate.approach) {
-          onSuccess((taskInfo) => {
-            cache.modify({
-              id: cache.identify(taskInfo),
-              fields: {
-                approachList(currentList) {
-                  return [approachCreate.approach, ...currentList];
-                },
+  const [createApproach, { error, loading }] = useMutation(APPROACH_CREATE, {
+    update(cache, { data: { approachCreate } }) {
+      if (approachCreate.approach) {
+        onSuccess((taskInfo) => {
+          cache.modify({
+            id: cache.identify(taskInfo),
+            fields: {
+              approachList(currentList) {
+                return [approachCreate.approach, ...currentList];
               },
-            });
-            return approachCreate.approach.id;
+            },
           });
-        }
-      },
-    }
-  );
+          return approachCreate.approach.id;
+        });
+      }
+    },
+  });
 
   const user = useLocalAppState('user');
 
@@ -84,10 +81,25 @@ export default function NewApproach({ taskId, onSuccess }) {
     event.preventDefault();
     setUIErrors([]);
     const input = event.target.elements;
-    const detailList = detailRows.map((detailId) => ({
-      category: input[`detail-category-${detailId}`].value,
-      content: input[`detail-content-${detailId}`].value,
-    }));
+    if (input.content.value.length <= 10) {
+      return setUIErrors([{ message: 'Approach content is too short' }]);
+    }
+    let detailsOk = true;
+    const detailList = detailRows
+      .filter((detailId) => input[`detail-content-${detailId}`].value)
+      .map((detailId) => {
+        if (input[`detail-content-${detailId}`].value.length <= 10) {
+          detailsOk = false;
+          return {};
+        }
+        return {
+          category: input[`detail-category-${detailId}`].value,
+          content: input[`detail-content-${detailId}`].value,
+        };
+      });
+    if (!detailsOk) {
+      return setUIErrors([{ message: 'Approach detail is too short' }]);
+    }
     const { data, errors: rootErrors } = await createApproach({
       variables: {
         taskId,
@@ -113,7 +125,7 @@ export default function NewApproach({ taskId, onSuccess }) {
           <div className="form-entry">
             <label>
               APPROACH
-              <textarea name="content" placeholder="Be brief!" />
+              <textarea name="content" placeholder="Be brief!" required />
             </label>
           </div>
           <div className="form-entry">
@@ -139,16 +151,18 @@ export default function NewApproach({ taskId, onSuccess }) {
             <button
               type="button"
               className="y-spaced"
-              onClick={() =>
-                setDetailRows((rows) => [...rows, rows.length])
-              }
+              onClick={() => setDetailRows((rows) => [...rows, rows.length])}
             >
               + Add more details
             </button>
           </div>
           <Errors errors={uiErrors} />
           <div className="spaced">
-            <button className="btn btn-primary" type="submit">
+            <button
+              className="btn btn-primary"
+              type="submit"
+              disabled={loading}
+            >
               Save
             </button>
           </div>

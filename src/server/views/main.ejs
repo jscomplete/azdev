@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title><%- viewData.title %></title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta
+      name="viewport"
+      content="width=device-width,minimum-scale=1,initial-scale=1,shrink-to-fit=no"
+    />
+    <meta name="description" content="<%= viewData.description %>" />
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <link rel="canonical" href="<%= viewData.url %>" />
+    <meta name="robots" content="index, follow" />
+    <meta name="content-type" content="Page" />
+    <meta name="categories" content="page" />
+    <meta property="og:site_name" content="<%= viewData.appName %>" />
+    <meta property="og:url" content="<%= viewData.url %>" />
+    <meta property="og:title" content="<%= viewData.title %>" />
+    <meta property="og:description" content="<%= viewData.description %>" />
+    <meta property="og:image" content="<%= viewData.image %>" />
+    <link rel="shortcut icon" href="/sf/favicon.ico" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="blue" />
+    <meta name="apple-mobile-web-app-title" content="<%= viewData.appName %>" />
+    <link rel="stylesheet" href="/sf/bundles/<%- gVars['main'][0] -%>" />
+  </head>
+  <body id="top">
+    <div id="root"></div>
+    <script
+      src="/sf/bundles/<%- gVars['vendor'] -%>"
+      type="text/javascript"
+    ></script>
+    <script
+      src="/sf/bundles/<%- gVars['main'][1] -%>"
+      type="text/javascript"
+    ></script>
+  </body>
+</html>

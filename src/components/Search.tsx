@@ -1,13 +1,13 @@
-import React from 'react';
-import { gql, useQuery } from '@apollo/client';
+import * as React from 'react';
 
-import { useStore } from '../store';
+import { gql, useQuery } from '@apollo/client';
+import { useStore } from 'store';
 
 const SEARCH_RESULTS = gql`
   query searchResults($searchTerm: String!) {
     searchResults: search(term: $searchTerm) {
-      type: __typename
       id
+      type: __typename
       content
       ... on Task {
         approachCount
@@ -26,6 +26,7 @@ function SearchResults({ searchTerm }) {
   const { AppLink } = useStore();
   const { error, loading, data } = useQuery(SEARCH_RESULTS, {
     variables: { searchTerm },
+    fetchPolicy: 'cache-and-network',
   });
 
   if (error) {
@@ -33,12 +34,12 @@ function SearchResults({ searchTerm }) {
   }
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return <div className="loading">{loading}</div>;
   }
 
   return (
     <div>
-      {data && data.searchResults && (
+      {data.searchResults && (
         <div>
           <h2>Search Results</h2>
           <div className="y-spaced">
@@ -49,9 +50,7 @@ function SearchResults({ searchTerm }) {
               <div key={index} className="box box-primary">
                 <AppLink
                   to="TaskPage"
-                  taskId={
-                    item.type === 'Approach' ? item.task.id : item.id
-                  }
+                  taskId={item.type === 'Approach' ? item.task.id : item.id}
                 >
                   <span className="search-label">{item.type}</span>{' '}
                   {item.content.substr(0, 250)}
@@ -83,23 +82,18 @@ export default function Search({ searchTerm = null }) {
   };
 
   return (
-    <div>
-      <div className="main-container">
+    <div className="search-form">
+      <div className="m-5">
         <form method="post" onSubmit={handleSearchSubmit}>
           <div className="center">
             <input
               type="search"
               name="search"
-              className="input-append"
-              defaultValue={searchTerm}
               placeholder="Search all tasks and approaches"
+              autoComplete="off"
+              defaultValue={searchTerm}
               required
             />
-            <div className="">
-              <button className="btn btn-append" type="submit">
-                Search
-              </button>
-            </div>
           </div>
         </form>
       </div>

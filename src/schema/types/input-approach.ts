@@ -13,7 +13,7 @@ const ApproachInput = new GraphQLInputObjectType({
     content: { type: new GraphQLNonNull(GraphQLString) },
     detailList: {
       type: new GraphQLNonNull(
-        new GraphQLList(new GraphQLNonNull(ApproachDetailInput))
+        new GraphQLList(new GraphQLNonNull(ApproachDetailInput)),
       ),
     },
   }),

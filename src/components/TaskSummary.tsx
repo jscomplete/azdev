@@ -1,11 +1,13 @@
-import React from 'react';
+import * as React from 'react';
+import { gql } from '@apollo/client';
 
-import { useStore } from '../store';
+import { useStore } from 'store';
 
-export const TASK_SUMMARY_FRAGMENT = `
+export const TASK_SUMMARY_FRAGMENT = gql`
   fragment TaskSummary on Task {
     content
     author {
+      id
       username
     }
     tags

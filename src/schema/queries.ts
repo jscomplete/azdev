@@ -1,14 +1,10 @@
 import {
-  GraphQLID,
   GraphQLObjectType,
+  GraphQLID,
   GraphQLString,
-  GraphQLInt,
   GraphQLNonNull,
   GraphQLList,
 } from 'graphql';
-
-import NumbersInRange from './types/numbers-in-range';
-import { numbersInRangeObject } from '../utils';
 
 import Task from './types/task';
 import SearchResultItem from './types/search-result-item';
@@ -20,24 +16,7 @@ const QueryType = new GraphQLObjectType({
     currentTime: {
       type: GraphQLString,
       resolve: () => {
-        const isoString = new Date().toISOString();
-        return isoString.slice(11, 19);
-      },
-    },
-    numbersInRange: {
-      type: NumbersInRange,
-      args: {
-        begin: { type: new GraphQLNonNull(GraphQLInt) },
-        end: { type: new GraphQLNonNull(GraphQLInt) },
-      },
-      resolve: function (source, { begin, end }) {
-        return numbersInRangeObject(begin, end);
-      },
-    },
-    taskMainList: {
-      type: new GraphQLList(new GraphQLNonNull(Task)),
-      resolve: async (source, args, { loaders }) => {
-        return loaders.tasksByTypes.load('latest');
+        return new Date().toISOString();
       },
     },
     taskInfo: {
@@ -51,20 +30,18 @@ const QueryType = new GraphQLObjectType({
     },
     search: {
       type: new GraphQLNonNull(
-        new GraphQLList(new GraphQLNonNull(SearchResultItem))
+        new GraphQLList(new GraphQLNonNull(SearchResultItem)),
       ),
       args: {
         term: { type: new GraphQLNonNull(GraphQLString) },
       },
       resolve: async (source, args, { loaders }) => {
-        return loaders.searchResults.load(args.term);
+        return loaders.search.load(args.term);
       },
     },
     me: {
       type: Me,
-      resolve: async (source, args, { currentUser }) => {
-        return currentUser;
-      },
+      resolve: async (source, args, { currentUser }) => currentUser,
     },
   },
 });

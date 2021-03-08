@@ -12,9 +12,7 @@ const UserPayload = new GraphQLObjectType({
   name: 'UserPayload',
   fields: () => ({
     errors: {
-      type: new GraphQLNonNull(
-        new GraphQLList(new GraphQLNonNull(UserError))
-      ),
+      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(UserError))),
     },
     user: { type: User },
     authToken: { type: GraphQLString },

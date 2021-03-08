@@ -1,8 +1,4 @@
-import {
-  GraphQLInputObjectType,
-  GraphQLString,
-  GraphQLNonNull,
-} from 'graphql';
+import { GraphQLInputObjectType, GraphQLString, GraphQLNonNull } from 'graphql';
 
 const AuthInput = new GraphQLInputObjectType({
   name: 'AuthInput',

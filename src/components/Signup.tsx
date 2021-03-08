@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { useMutation, gql } from '@apollo/client';
 
-import { useStore } from '../store';
+import { useStore } from 'store';
 import Errors from './Errors';
 
 const USER_CREATE = gql`
@@ -21,15 +21,12 @@ const USER_CREATE = gql`
 
 export default function Signup() {
   const { setLocalAppState } = useStore();
-  const [uiErrors, setUIErrors] = useState();
   const [createUser, { error, loading }] = useMutation(USER_CREATE);
-
-  if (error) {
-    return <div className="error">{error.message}</div>;
-  }
+  const [uiErrors, setUIErrors] = React.useState<any>([]);
 
   const handleSignup = async (event) => {
     event.preventDefault();
+    setUIErrors([]);
     const input = event.target.elements;
     if (input.password.value !== input.confirmPassword.value) {
       return setUIErrors([{ message: 'Password mismatch' }]);
@@ -39,6 +36,7 @@ export default function Signup() {
         input: {
           firstName: input.firstName.value,
           lastName: input.lastName.value,
+          email: input.email.value,
           username: input.username.value,
           password: input.password.value,
         },
@@ -55,6 +53,7 @@ export default function Signup() {
     window.localStorage.setItem('azdev:user', JSON.stringify(user));
     setLocalAppState({ user, component: { name: 'Home' } });
   };
+
   return (
     <div className="sm-container">
       <form method="POST" onSubmit={handleSignup}>
@@ -69,6 +68,12 @@ export default function Signup() {
             <label>
               LAST NAME
               <input type="text" name="lastName" required />
+            </label>
+          </div>
+          <div className="form-entry">
+            <label>
+              EMAIL
+              <input type="email" name="email" required />
             </label>
           </div>
           <div className="form-entry">
@@ -89,22 +94,15 @@ export default function Signup() {
             <div className="form-entry">
               <label>
                 CONFIRM PASSWORD
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  required
-                />
+                <input type="password" name="confirmPassword" required />
               </label>
             </div>
           </div>
         </div>
         <Errors errors={uiErrors} />
+        {error && <div className="error">{error.message}</div>}
         <div className="spaced">
-          <button
-            className="btn btn-primary"
-            type="submit"
-            disabled={loading}
-          >
+          <button className="btn btn-primary" type="submit" disabled={loading}>
             Signup
           </button>
         </div>

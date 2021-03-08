@@ -1,4 +1,8 @@
+import fs from 'fs';
+import path from 'path';
 import { GraphQLSchema, printSchema } from 'graphql';
+
+import { isDev } from 'config/server';
 
 import QueryType from './queries';
 import MutationType from './mutations';
@@ -10,4 +14,9 @@ export const schema = new GraphQLSchema({
   subscription: SubscriptionType,
 });
 
-console.log(printSchema(schema));
+if (isDev) {
+  fs.writeFileSync(
+    path.resolve('./src/schema/schema.graphql'),
+    printSchema(schema),
+  );
+}

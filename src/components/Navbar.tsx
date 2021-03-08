@@ -1,6 +1,6 @@
-import React from 'react';
+import * as React from 'react';
 
-import { useStore } from '../store';
+import { useStore } from 'store';
 
 export default function Navbar({ user }) {
   const { setLocalAppState, AppLink } = useStore();
